@@ -4,6 +4,9 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class XercHesabati extends StatefulWidget {
+  final bool showAppBar;
+
+  XercHesabati({this.showAppBar = true});
   @override
   _XercHesabatiState createState() => _XercHesabatiState();
 }
@@ -18,6 +21,8 @@ class _XercHesabatiState extends State<XercHesabati> {
   TextEditingController startDateController = TextEditingController();
   TextEditingController endDateController = TextEditingController();
 
+  double toplamMebleg = 0.0;
+
   @override
   void initState() {
     super.initState();
@@ -29,6 +34,7 @@ class _XercHesabatiState extends State<XercHesabati> {
   }
 
   Future<void> fetchData() async {
+    // ignore: prefer_const_declarations
     final String baseUrl = 'http://10.0.2.2:3000/api/xerc_hes';
     final DateFormat formatter = DateFormat('yyyy-MM-dd');
 
@@ -47,12 +53,13 @@ class _XercHesabatiState extends State<XercHesabati> {
       if (response.statusCode == 200) {
         setState(() {
           data = json.decode(response.body);
+          toplamMebleg = data.fold<double>(0, (sum, item) => sum + (item['mebleg'] ?? 0).toDouble());
         });
       } else {
-        throw Exception('Veri çekme başarısız oldu: ${response.reasonPhrase}');
+        throw Exception('Data çəkmə uğursuz oldu: ${response.reasonPhrase}');
       }
     } catch (error) {
-      print('Hata oluştu: $error');
+      print('Xıta baş verdi: $error');
       // Xəta vəziyyətində istifadəçiyə bildiriş göstəriləbilir
     } finally {
       setState(() {
@@ -71,6 +78,7 @@ class _XercHesabatiState extends State<XercHesabati> {
     if (pickedStartDate != null && pickedStartDate != startDate) {
       if (pickedStartDate.isAfter(endDate!)) {
         showDialog(
+          // ignore: use_build_context_synchronously
           context: context,
           builder: (BuildContext context) {
             return AlertDialog(
@@ -135,34 +143,45 @@ class _XercHesabatiState extends State<XercHesabati> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        child: Padding(
-          padding: const EdgeInsets.all(5.0),
-          child: Stack(
-            children: [
-              Column(
-                children: [
-                  const Padding(padding: EdgeInsets.all(30)),
-                  const SizedBox(height: 20),
-                  const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Xərc hesabatı',
-                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  Expanded(
-                    child: isLoading
-                        ? const Center(child: CircularProgressIndicator())
-                        : data.isEmpty
-                            ? const Center(child: Text('Məlumat yoxdur'))
-                            : SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                 child: SingleChildScrollView(
-                                  scrollDirection: Axis.vertical,
+      appBar: widget.showAppBar
+          ? AppBar(
+              title: const Text("Soffen Mobil", style: TextStyle(color: Colors.white)),
+              centerTitle: true,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.only(
+                    bottomRight: Radius.circular(25), bottomLeft: Radius.circular(25)),
+              ),
+              elevation: 0.00,
+              backgroundColor: const Color.fromARGB(255, 56, 103, 154),
+            )
+          : null,
+      body: Padding(
+        padding: const EdgeInsets.all(5.0),
+        child: Stack(
+          children: [
+            Column(
+              children: [
+                const Padding(padding: EdgeInsets.all(30)),
+                const SizedBox(height: 20),
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Xərc hesabatı',
+                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Expanded(
+                  child: isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : data.isEmpty
+                          ? const Center(child: Text('Məlumat yoxdur'))
+                          : SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: SingleChildScrollView(
+                                scrollDirection: Axis.vertical,
                                 child: DataTable(
                                   columns: const [
                                     DataColumn(label: Text('Adı')),
@@ -170,69 +189,77 @@ class _XercHesabatiState extends State<XercHesabati> {
                                     DataColumn(label: Text('Məbləğ')),
                                     DataColumn(label: Text('Layihə')),
                                   ],
-                                  rows: data.map((item) {
-                                    return DataRow(cells: [
-                                      DataCell(Text(item['adi'] ?? '')),
-                                      DataCell(Text(item['qeyd'] ?? '')),
-                                      DataCell(Text(item['mebleg'].toString())),
-                                      DataCell(Text(item['layihe'] ?? '')),
-                                    ]);
-                                  }).toList(),
+                                  rows: [
+                                    ...data.map((item) {
+                                      return DataRow(cells: [
+                                        DataCell(Text(item['adi'] ?? '')),
+                                        DataCell(Text(item['qeyd'] ?? '')),
+                                        DataCell(Text(item['mebleg'].toString())),
+                                        DataCell(Text(item['layihe'] ?? '')),
+                                      ]);
+                                    }).toList(),
+                                    DataRow(cells: [
+                                      const DataCell(Text('Toplam', style: TextStyle(fontWeight: FontWeight.bold))),
+                                      const DataCell(Text('')),
+                                      DataCell(Text(toplamMebleg.toString(), style: const TextStyle(fontWeight: FontWeight.bold))),
+                                      const DataCell(Text('')),
+                                    ]),
+                                  ],
                                 ),
                               ),
-                  ),
-                )
-               ],
-              ),
-              Positioned(
-                top: 0,
-                left: 7.5,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(
-                      width: 120,  // Genişliyi kiçiltmək üçün
-                      child: TextField(
-                        controller: startDateController,
-                        decoration: const InputDecoration(
-                          icon: Icon(Icons.calendar_today, size: 18),  // Icon ölçüsünü kiçiltmək üçün
-                          labelText: 'Başlama Tarixi',
-                        ),
-                        readOnly: true,
-                        onTap: () => _selectStartDate(context),
-                      ),
-                    ),
-                    const SizedBox(width: 22),
-                    SizedBox(
-                      width: 120,  // Genişliyi kiçiltmək üçün
-                      child: TextField(
-                        controller: endDateController,
-                        decoration: const InputDecoration(
-                          icon: Icon(Icons.calendar_today, size: 18),  // Icon ölçüsünü kiçiltmək üçün
-                          labelText: 'Bitmə Tarixi',
-                        ),
-                        readOnly: true,
-                        onTap: () => _selectEndDate(context),
-                      ),
-                    ),
-                    const SizedBox(width: 30),
-                   TextButton.icon(
-                     onPressed: () {},
-                     icon: const Icon(Icons.filter_list),
-                     label: const Text('Axtar'),
-                    ),
-                  ],
+                            ),
                 ),
+              ],
+            ),
+            Positioned(
+              top: 0,
+              left: 7.5,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 120, // Genişliyi kiçiltmək üçün
+                    child: TextField(
+                      controller: startDateController,
+                      decoration: const InputDecoration(
+                        icon: Icon(Icons.calendar_today, size: 18), // Icon ölçüsünü kiçiltmək üçün
+                        labelText: 'Başlama Tarixi',
+                      ),
+                      readOnly: true,
+                      onTap: () => _selectStartDate(context),
+                    ),
+                  ),
+                  const SizedBox(width: 22),
+                  SizedBox(
+                    width: 120, // Genişliyi kiçiltmək üçün
+                    child: TextField(
+                      controller: endDateController,
+                      decoration: const InputDecoration(
+                        icon: Icon(Icons.calendar_today, size: 18), // Icon ölçüsünü kiçiltmək üçün
+                        labelText: 'Bitmə Tarixi',
+                      ),
+                      readOnly: true,
+                      onTap: () => _selectEndDate(context),
+                    ),
+                  ),
+                  const SizedBox(width: 30),
+                  TextButton.icon(
+                    onPressed: fetchData,
+                    icon: const Icon(Icons.filter_list),
+                    label: const Text('Axtar'),
+                  ),
+                ],
               ),
-               Align(
-                alignment: Alignment.bottomRight,
-                child: FloatingActionButton(
-                  backgroundColor: const Color.fromARGB(255, 56, 103, 154),
-                  onPressed: fetchData,
-                  child: const Icon(Icons.calculate, color: Colors.white, size: 36),
-                ),)
-            ],
-          ),
+            ),
+            Align(
+              alignment: Alignment.bottomRight,
+              child: FloatingActionButton(
+                backgroundColor: const Color.fromARGB(255, 56, 103, 154),
+                onPressed: fetchData,
+                child: const Icon(Icons.calculate, color: Colors.white, size: 36),
+              ),
+            )
+          ],
         ),
       ),
     );

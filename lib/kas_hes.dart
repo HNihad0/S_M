@@ -4,9 +4,9 @@ import 'dart:convert';
 import 'package:intl/intl.dart';
 
 class MSSQLTableDataFetch extends StatefulWidget {
-  final Function(double) onTotalSonqalUpdated;  // Add the callback parameter
+  final bool showAppBar;
 
-  MSSQLTableDataFetch({required this.onTotalSonqalUpdated});
+  MSSQLTableDataFetch({this.showAppBar = true});
 
   @override
   _MSSQLTableDataFetchState createState() => _MSSQLTableDataFetchState();
@@ -54,9 +54,7 @@ class _MSSQLTableDataFetchState extends State<MSSQLTableDataFetch> {
           data = fetchedData;
         });
 
-        // Calculate the total sonqal
-        double totalSonqal = data.fold<double>(0, (sum, item) => sum + (item['sonqal'] ?? 0).toDouble());
-        widget.onTotalSonqalUpdated(totalSonqal);  // Pass the total value back to HomePage
+        
       } else {
         throw Exception('Veri çekme başarısız oldu: ${response.reasonPhrase}');
       }
@@ -142,124 +140,138 @@ class _MSSQLTableDataFetchState extends State<MSSQLTableDataFetch> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
+     appBar: widget.showAppBar
+          ? AppBar(
+              title: const Text("Soffen Mobil", style: TextStyle(color: Colors.white)),
+              centerTitle: true,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.only(
+                    bottomRight: Radius.circular(25), bottomLeft: Radius.circular(25)),
+              ),
+              elevation: 0.00,
+              backgroundColor: const Color.fromARGB(255, 56, 103, 154),
+            )
+          : null,
+      body: Center(
         child: Padding(
           padding: const EdgeInsets.all(5.0),
-          child: Stack(
-            children: [
-              Column(
-                children: [
-                  const Padding(padding: EdgeInsets.all(30)),
-                  const SizedBox(height: 20),
-                  const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Kassa Hesabatı',
-                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  Expanded(
-                    child: isLoading
-                        ? const Center(child: CircularProgressIndicator())
-                        : data.isEmpty
-                            ? const Center(child: Text('Məlumat yoxdur'))
-                            : SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                child: DataTable(
-                                  columns: const [
-                                    DataColumn(label: Text('Kassa Adı')),
-                                    DataColumn(label: Text('İlk Qalıq')),
-                                    DataColumn(label: Text('Mədaxil')),
-                                    DataColumn(label: Text('Məxaric')),
-                                    DataColumn(label: Text('Son Qalıq')),
-                                  ],
-                                  rows: [
-                                    ...data.map((item) {
-                                      return DataRow(cells: [
-                                        DataCell(Text(item['kassa_name'] ?? '')),
-                                        DataCell(Text((item['ilkqal'] ?? 0).toString())),
-                                        DataCell(Text((item['medmiq'] ?? 0).toString())),
-                                        DataCell(Text((item['mexmiq'] ?? 0).toString())),
-                                        DataCell(Text((item['sonqal'] ?? 0).toString())),
-                                      ]);
-                                    }).toList(),
-                                    DataRow(cells: [
-                                      const DataCell(Text('Toplam', style: TextStyle(fontWeight: FontWeight.bold))),
-                                      DataCell(Text(
-                                        data.fold<double>(0, (sum, item) => sum + (item['ilkqal'] ?? 0).toDouble()).toString(),
-                                        style: const TextStyle(fontWeight: FontWeight.bold),
-                                      )),
-                                      DataCell(Text(
-                                        data.fold<double>(0, (sum, item) => sum + (item['medmiq'] ?? 0).toDouble()).toString(),
-                                        style: const TextStyle(fontWeight: FontWeight.bold),
-                                      )),
-                                      DataCell(Text(
-                                        data.fold<double>(0, (sum, item) => sum + (item['mexmiq'] ?? 0).toDouble()).toString(),
-                                        style: const TextStyle(fontWeight: FontWeight.bold),
-                                      )),
-                                      DataCell(Text(
-                                        data.fold<double>(0, (sum, item) => sum + (item['sonqal'] ?? 0).toDouble()).toString(),
-                                        style: const TextStyle(fontWeight: FontWeight.bold),
-                                      )),
-                                    ]),
-                                  ],
-                                ),
-                              ),
-                  ),
-                ],
-              ),
-              Positioned(
-                top: 0,
-                left: 7.5,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
+          child: Center(
+            child: Stack(
+              children: [
+                Column(
                   children: [
-                    SizedBox(
-                      width: 120,
-                      child: TextField(
-                        controller: startDateController,
-                        decoration: const InputDecoration(
-                          icon: Icon(Icons.calendar_today, size: 18),
-                          labelText: 'Başlama Tarixi',
+                    const Padding(padding: EdgeInsets.all(30)),
+                    const SizedBox(height: 20),
+                    const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Kassa Hesabatı',
+                          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                         ),
-                        readOnly: true,
-                        onTap: () => _selectStartDate(context),
-                      ),
+                      ],
                     ),
-                    const SizedBox(width: 22),
-                    SizedBox(
-                      width: 120,
-                      child: TextField(
-                        controller: endDateController,
-                        decoration: const InputDecoration(
-                          icon: Icon(Icons.calendar_today, size: 18),
-                          labelText: 'Bitmə Tarixi',
-                        ),
-                        readOnly: true,
-                        onTap: () => _selectEndDate(context),
-                      ),
-                    ),
-                    const SizedBox(width: 30),
-                   TextButton.icon(
-                     onPressed: fetchData,
-                     icon: const Icon(Icons.filter_list),
-                     label: const Text('Axtar'),
+                    const SizedBox(height: 20),
+                    Expanded(
+                      child: isLoading
+                          ? const Center(child: CircularProgressIndicator())
+                          : data.isEmpty
+                              ? const Center(child: Text('Məlumat yoxdur'))
+                              : SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+                                  child: DataTable(
+                                    columns: const [
+                                      DataColumn(label: Text('Kassa Adı')),
+                                      DataColumn(label: Text('İlk Qalıq')),
+                                      DataColumn(label: Text('Mədaxil')),
+                                      DataColumn(label: Text('Məxaric')),
+                                      DataColumn(label: Text('Son Qalıq')),
+                                    ],
+                                    rows: [
+                                      ...data.map((item) {
+                                        return DataRow(cells: [
+                                          DataCell(Text(item['kassa_name'] ?? '')),
+                                          DataCell(Text((item['ilkqal'] ?? 0).toString())),
+                                          DataCell(Text((item['medmiq'] ?? 0).toString())),
+                                          DataCell(Text((item['mexmiq'] ?? 0).toString())),
+                                          DataCell(Text((item['sonqal'] ?? 0).toString())),
+                                        ]);
+                                      }).toList(),
+                                      DataRow(cells: [
+                                        const DataCell(Text('Toplam', style: TextStyle(fontWeight: FontWeight.bold))),
+                                        DataCell(Text(
+                                          data.fold<double>(0, (sum, item) => sum + (item['ilkqal'] ?? 0).toDouble()).toString(),
+                                          style: const TextStyle(fontWeight: FontWeight.bold),
+                                        )),
+                                        DataCell(Text(
+                                          data.fold<double>(0, (sum, item) => sum + (item['medmiq'] ?? 0).toDouble()).toString(),
+                                          style: const TextStyle(fontWeight: FontWeight.bold),
+                                        )),
+                                        DataCell(Text(
+                                          data.fold<double>(0, (sum, item) => sum + (item['mexmiq'] ?? 0).toDouble()).toString(),
+                                          style: const TextStyle(fontWeight: FontWeight.bold),
+                                        )),
+                                        DataCell(Text(
+                                          data.fold<double>(0, (sum, item) => sum + (item['sonqal'] ?? 0).toDouble()).toString(),
+                                          style: const TextStyle(fontWeight: FontWeight.bold),
+                                        )),
+                                      ]),
+                                    ],
+                                  ),
+                                ),
                     ),
                   ],
                 ),
-              ),
-               Align(
-                alignment: Alignment.bottomRight,
-                child: FloatingActionButton(
-                  backgroundColor: const Color.fromARGB(255, 56, 103, 154),
-                  onPressed: fetchData,
-                  child: const Icon(Icons.calculate, color: Colors.white, size: 36),
+                Positioned(
+                  top: 0,
+                  left: 7.5,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: 120,
+                        child: TextField(
+                          controller: startDateController,
+                          decoration: const InputDecoration(
+                            icon: Icon(Icons.calendar_today, size: 18),
+                            labelText: 'Başlama Tarixi',
+                          ),
+                          readOnly: true,
+                          onTap: () => _selectStartDate(context),
+                        ),
+                      ),
+                      const SizedBox(width: 22),
+                      SizedBox(
+                        width: 120,
+                        child: TextField(
+                          controller: endDateController,
+                          decoration: const InputDecoration(
+                            icon: Icon(Icons.calendar_today, size: 18),
+                            labelText: 'Bitmə Tarixi',
+                          ),
+                          readOnly: true,
+                          onTap: () => _selectEndDate(context),
+                        ),
+                      ),
+                      const SizedBox(width: 30),
+                      TextButton.icon(
+                        onPressed: (){},
+                        icon: const Icon(Icons.filter_list),
+                        label: const Text('Axtar'),
+                      ),
+                    ],
+                  ),
                 ),
-               )
-            ],
+                Align(
+                  alignment: Alignment.bottomRight,
+                  child: FloatingActionButton(
+                    backgroundColor: const Color.fromARGB(255, 56, 103, 154),
+                    onPressed: fetchData,
+                    child: const Icon(Icons.calculate, color: Colors.white, size: 36),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

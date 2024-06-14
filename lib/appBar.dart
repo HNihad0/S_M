@@ -10,7 +10,6 @@ import 'package:soffen_mobile/kas_hes.dart';
 import 'package:soffen_mobile/my_flutter_app_icons.dart';
 import 'package:soffen_mobile/xerc_hes.dart';
 
-
 class PinCodeWidget extends StatefulWidget {
   const PinCodeWidget({super.key});
 
@@ -66,7 +65,7 @@ class _PinCodeWidgetState extends State<PinCodeWidget> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color.fromARGB(218, 241, 241, 241),
+      backgroundColor: const Color.fromARGB(218, 241, 241, 241),
       body: Center(
         child: SingleChildScrollView(
           child: Column(
@@ -233,16 +232,16 @@ class _MenuState extends State<Menu> {
 
     switch (selectedPage) {
       case 'Ana Səhifə':
-        content = HomePage();
+        content = const HomePage();
         break;
       case 'Kassa hesabatı':
-        content = MSSQLTableDataFetch(onTotalSonqalUpdated: (double ) {  },);
+        content = MSSQLTableDataFetch(showAppBar: false);
         break;
       case 'Əməkdaş dövriyyəsi':
         content = EmekdasDovriyyesiPage();
         break;
       case 'Cari hesablar':
-        content = CariHesab();
+        content = CariHesab(showAppBar: false);
         break;
       case 'Cari hesab dövriyyəsi':
         content = CariHesabDov();
@@ -251,13 +250,13 @@ class _MenuState extends State<Menu> {
         content = KassaDovriyyesi();
         break;
       case 'Xərc hesabatı':
-        content = XercHesabati();
+        content = XercHesabati(showAppBar: false);
         break;
       case 'Gəlir hesabatı':
-        content = GelirHesabat();
+        content = GelirHesabat(showAppBar: false);
         break;
       default:
-        content = HomePage();
+        content = const HomePage();
     }
 
     return Scaffold(
@@ -270,29 +269,32 @@ class _MenuState extends State<Menu> {
         ),
         elevation: 0.00,
         backgroundColor: const Color.fromARGB(255, 56, 103, 154),
-        actions:  <Widget>[
-          Image.asset(
-            'assets/soffen-logo.png',
-            width: 85,
-            height: 85,
-          ),
-          const Padding(padding: EdgeInsets.only(right: .0)),
-        ],
       ),
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
           children: <Widget>[
-            const DrawerHeader(
-              decoration: BoxDecoration(
+            DrawerHeader(
+              decoration: const BoxDecoration(
                 color: Color.fromARGB(255, 56, 103, 154),
               ),
-              child: Text(
-                'HESABATLAR',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.asset(
+                    'assets/soffen-logo.png',
+                    width: 90,
+                    height: 90,
+                  ),
+                  const SizedBox(height: 5),
+                  const Text(
+                    'Username',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                    ),
+                  ),
+                ],
               ),
             ),
             ListTile(
@@ -337,8 +339,8 @@ class _MenuState extends State<Menu> {
             ),
             ListTile(
               leading: const Icon(
-                   MyFlutterApp.cash_register,
-                    size: 18,
+                MyFlutterApp.cash_register,
+                size: 18,
               ),
               title: const Text('Kassa hesabatı'),
               onTap: () {
@@ -349,7 +351,7 @@ class _MenuState extends State<Menu> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.money),
+              leading: const Icon(Icons.currency_exchange),
               title: const Text('Kassa dövriyyəsi'),
               onTap: () {
                 setState(() {
@@ -360,8 +362,8 @@ class _MenuState extends State<Menu> {
             ),
             ListTile(
               leading: const Icon(
-                   MyFlutterApp.basket,
-                    size: 18,
+                MyFlutterApp.basket,
+                size: 18,
               ),
               title: const Text('Xərc hesabatı'),
               onTap: () {
@@ -383,8 +385,8 @@ class _MenuState extends State<Menu> {
             ),
             ListTile(
               leading: const Icon(
-                   MyFlutterApp.chart_pie,
-                    size: 18,
+                MyFlutterApp.chart_pie,
+                size: 18,
               ),
               title: const Text('Mənfəət və Zərər hesabatı'),
               onTap: () {
@@ -398,7 +400,7 @@ class _MenuState extends State<Menu> {
         ),
       ),
       body: Container(
-        padding: EdgeInsets.all(3),
+        padding: const EdgeInsets.all(3),
         child: content,
       ),
     );

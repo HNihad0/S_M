@@ -4,6 +4,9 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class GelirHesabat extends StatefulWidget {
+    final bool showAppBar;
+
+  GelirHesabat({this.showAppBar = true});
   @override
   _GelirHesabatState createState() => _GelirHesabatState();
 }
@@ -135,6 +138,18 @@ class _GelirHesabatState extends State<GelirHesabat> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: widget.showAppBar
+          ? AppBar(
+              title: const Text("Soffen Mobil", style: TextStyle(color: Colors.white)),
+              centerTitle: true,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.only(
+                    bottomRight: Radius.circular(25), bottomLeft: Radius.circular(25)),
+              ),
+              elevation: 0.00,
+              backgroundColor: const Color.fromARGB(255, 56, 103, 154),
+            )
+          : null,
       body: Container(
         child: Padding(
           padding: const EdgeInsets.all(5.0),

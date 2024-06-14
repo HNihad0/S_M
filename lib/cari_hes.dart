@@ -4,6 +4,9 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class CariHesab extends StatefulWidget {
+  final bool showAppBar;
+
+  CariHesab({this.showAppBar = true});
   @override
   _CariHesabState createState() => _CariHesabState();
 }
@@ -17,6 +20,9 @@ class _CariHesabState extends State<CariHesab> {
 
   TextEditingController startDateController = TextEditingController();
   TextEditingController endDateController = TextEditingController();
+
+  double toplamVerilecek = 0.0;
+  double toplamAlinacak = 0.0;
 
   @override
   void initState() {
@@ -47,6 +53,8 @@ class _CariHesabState extends State<CariHesab> {
       if (response.statusCode == 200) {
         setState(() {
           data = json.decode(response.body);
+          toplamVerilecek = data.fold<double>(0, (sum, item) => sum + (item['ilkqal'] ?? 0).toDouble());
+          toplamAlinacak = data.fold<double>(0, (sum, item) => sum + (item['sonqal'] ?? 0).toDouble());
         });
       } else {
         throw Exception('Veri çekme başarısız oldu: ${response.reasonPhrase}');
@@ -134,6 +142,18 @@ class _CariHesabState extends State<CariHesab> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: widget.showAppBar
+          ? AppBar(
+              title: const Text("Soffen Mobil", style: TextStyle(color: Colors.white)),
+              centerTitle: true,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.only(
+                    bottomRight: Radius.circular(25), bottomLeft: Radius.circular(25)),
+              ),
+              elevation: 0.00,
+              backgroundColor: const Color.fromARGB(255, 56, 103, 154),
+            )
+          : null,
       body: Container(
         child: Padding(
           padding: const EdgeInsets.all(5.0),
@@ -161,21 +181,29 @@ class _CariHesabState extends State<CariHesab> {
                             : SingleChildScrollView(
                                 scrollDirection: Axis.horizontal,
                                 child: DataTable(
-                                         columns: const [
-                                            DataColumn(label: Text('IDN')),
-                                            DataColumn(label: Text('Adı')),
-                                            DataColumn(label: Text('Veriləcək')),
-                                            DataColumn(label: Text('Alınacaq')),
-                                            ],
-                                         rows: data.map((item) {
-                                           return DataRow(cells: [
-                                           DataCell(Text(item['idn'].toString())),
-                                           DataCell(Text(item['kontra_name'] ?? '')),
-                                           DataCell(Text(item['ilkqal'].toString())),
-                                           DataCell(Text(item['sonqal'].toString())),
-                                            ]);
+                                  columns: const [
+                                    DataColumn(label: Text('IDN')),
+                                    DataColumn(label: Text('Adı')),
+                                    DataColumn(label: Text('Veriləcək')),
+                                    DataColumn(label: Text('Alınacaq')),
+                                  ],
+                                  rows: [
+                                    ...data.map((item) {
+                                      return DataRow(cells: [
+                                        DataCell(Text(item['idn'].toString())),
+                                        DataCell(Text(item['kontra_name'] ?? '')),
+                                        DataCell(Text(item['ilkqal'].toString())),
+                                        DataCell(Text(item['sonqal'].toString())),
+                                      ]);
                                     }).toList(),
-                                 ),
+                                    DataRow(cells: [
+                                      const DataCell(Text('Toplam', style: TextStyle(fontWeight: FontWeight.bold))),
+                                      const DataCell(Text('')),
+                                      DataCell(Text(toplamVerilecek.toString(), style: const TextStyle(fontWeight: FontWeight.bold))),
+                                      DataCell(Text(toplamAlinacak.toString(), style: const TextStyle(fontWeight: FontWeight.bold))),
+                                    ]),
+                                  ],
+                                ),
                               ),
                   ),
                 ],
@@ -212,21 +240,22 @@ class _CariHesabState extends State<CariHesab> {
                       ),
                     ),
                     const SizedBox(width: 30),
-                   TextButton.icon(
-                     onPressed: () {},
-                     icon: const Icon(Icons.filter_list),
-                     label: const Text('Axtar'),
+                    TextButton.icon(
+                      onPressed: fetchData,
+                      icon: const Icon(Icons.filter_list),
+                      label: const Text('Axtar'),
                     ),
                   ],
                 ),
               ),
-               Align(
+              Align(
                 alignment: Alignment.bottomRight,
                 child: FloatingActionButton(
                   backgroundColor: const Color.fromARGB(255, 56, 103, 154),
                   onPressed: fetchData,
                   child: const Icon(Icons.calculate, color: Colors.white, size: 36),
-                ),)
+                ),
+              ),
             ],
           ),
         ),

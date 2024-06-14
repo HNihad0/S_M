@@ -18,6 +18,10 @@ class _KassaDovriyyesiState extends State<KassaDovriyyesi> {
   TextEditingController startDateController = TextEditingController();
   TextEditingController endDateController = TextEditingController();
 
+  double toplamMedaxil = 0.0;
+  double toplamMexaric = 0.0;
+  double toplamSonQaliq = 0.0;
+
   @override
   void initState() {
     super.initState();
@@ -47,6 +51,9 @@ class _KassaDovriyyesiState extends State<KassaDovriyyesi> {
       if (response.statusCode == 200) {
         setState(() {
           data = json.decode(response.body);
+          toplamMedaxil = data.fold<double>(0, (sum, item) => sum + (item['medmiq'] ?? 0).toDouble());
+          toplamMexaric = data.fold<double>(0, (sum, item) => sum + (item['mexmiq'] ?? 0).toDouble());
+          toplamSonQaliq = data.fold<double>(0, (sum, item) => sum + (item['sonqal'] ?? 0).toDouble());
         });
       } else {
         throw Exception('Veri çekme başarısız oldu: ${response.reasonPhrase}');
@@ -106,7 +113,6 @@ class _KassaDovriyyesiState extends State<KassaDovriyyesi> {
     if (pickedEndDate != null && pickedEndDate != endDate) {
       if (pickedEndDate.isBefore(startDate!)) {
         showDialog(
-          // ignore: use_build_context_synchronously
           context: context,
           builder: (BuildContext context) {
             return AlertDialog(
@@ -171,19 +177,28 @@ class _KassaDovriyyesiState extends State<KassaDovriyyesi> {
                                     DataColumn(label: Text('Məxaric')),
                                     DataColumn(label: Text('Son Qalıq')),
                                   ],
-                                  rows: data.map((item) {
-                                    return DataRow(cells: [
-                                      DataCell(Text(item['kassa_name'] ?? '')),
-                                      DataCell(Text(item['ilkqal'].toString())),
-                                      DataCell(Text(item['medmiq'].toString())),
-                                      DataCell(Text(item['mexmiq'].toString())),
-                                      DataCell(Text(item['sonqal'].toString())),
-                                    ]);
-                                  }).toList(),
+                                  rows: [
+                                    ...data.map((item) {
+                                      return DataRow(cells: [
+                                        DataCell(Text(item['kassa_name'] ?? '')),
+                                        DataCell(Text(item['ilkqal'].toString())),
+                                        DataCell(Text(item['medmiq'].toString())),
+                                        DataCell(Text(item['mexmiq'].toString())),
+                                        DataCell(Text(item['sonqal'].toString())),
+                                      ]);
+                                    }).toList(),
+                                    DataRow(cells: [
+                                      const DataCell(Text('Toplam', style: TextStyle(fontWeight: FontWeight.bold))),
+                                      const DataCell(Text('')),
+                                      DataCell(Text(toplamMedaxil.toString(), style: const TextStyle(fontWeight: FontWeight.bold))),
+                                      DataCell(Text(toplamMexaric.toString(), style: const TextStyle(fontWeight: FontWeight.bold))),
+                                      DataCell(Text(toplamSonQaliq.toString(), style: const TextStyle(fontWeight: FontWeight.bold))),
+                                    ]),
+                                  ],
                                 ),
                               ),
                   ),
-                )
+                ),
                ],
               ),
               Positioned(
@@ -219,7 +234,7 @@ class _KassaDovriyyesiState extends State<KassaDovriyyesi> {
                     ),
                     const SizedBox(width: 30),
                    TextButton.icon(
-                     onPressed: () {},
+                     onPressed: fetchData,
                      icon: const Icon(Icons.filter_list),
                      label: const Text('Axtar'),
                     ),
