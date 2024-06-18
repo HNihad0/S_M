@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
@@ -7,6 +9,7 @@ class CariHesab extends StatefulWidget {
   final bool showAppBar;
 
   CariHesab({this.showAppBar = true});
+  
   @override
   _CariHesabState createState() => _CariHesabState();
 }
@@ -35,7 +38,7 @@ class _CariHesabState extends State<CariHesab> {
   }
 
   Future<void> fetchData() async {
-    final String baseUrl = 'http://10.0.2.2:3000/api/cari_hes';
+    final String baseUrl = 'http://192.168.0.103:3000/api/cari_hes';
     final DateFormat formatter = DateFormat('yyyy-MM-dd');
 
     startDate ??= DateTime.now();
@@ -59,9 +62,34 @@ class _CariHesabState extends State<CariHesab> {
       } else {
         throw Exception('Veri çekme başarısız oldu: ${response.reasonPhrase}');
       }
+    } on SocketException {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor:  Color.fromARGB(255, 56, 103, 154),
+          content: Text('İnternetə qoşulmayıb. İnternet əlaqənizi yoxlayın.'),
+        ),
+      );
+    } on HttpException {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor:  Color.fromARGB(255, 56, 103, 154),
+          content: Text('HTTP hatası: Bağlantı kurulamadı.'),
+        ),
+      );
+    } on FormatException {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor:  Color.fromARGB(255, 56, 103, 154),
+          content: Text('Format hatası: Geçersiz yanıt alındı.'),
+        ),
+      );
     } catch (error) {
-      print('Hata oluştu: $error');
-      // Xəta vəziyyətində istifadəçiyə bildiriş göstəriləbilir
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor:  const Color.fromARGB(255, 56, 103, 154),
+          content: Text('Xəta baş verdi: $error'),
+        ),
+      );
     } finally {
       setState(() {
         isLoading = false;
@@ -241,7 +269,7 @@ class _CariHesabState extends State<CariHesab> {
                     ),
                     const SizedBox(width: 30),
                     TextButton.icon(
-                      onPressed: fetchData,
+                      onPressed: (){},
                       icon: const Icon(Icons.filter_list),
                       label: const Text('Axtar'),
                     ),

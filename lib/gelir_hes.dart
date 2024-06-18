@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:io';
 
 class GelirHesabat extends StatefulWidget {
-    final bool showAppBar;
+  final bool showAppBar;
 
   GelirHesabat({this.showAppBar = true});
+
   @override
   _GelirHesabatState createState() => _GelirHesabatState();
 }
@@ -32,7 +34,7 @@ class _GelirHesabatState extends State<GelirHesabat> {
   }
 
   Future<void> fetchData() async {
-    final String baseUrl = 'http://10.0.2.2:3000/api/gelir_hes';
+    final String baseUrl = 'http://192.168.0.103:3000/api/gelir_hes';
     final DateFormat formatter = DateFormat('yyyy-MM-dd');
 
     startDate ??= DateTime.now();
@@ -54,16 +56,40 @@ class _GelirHesabatState extends State<GelirHesabat> {
       } else {
         throw Exception('Veri çekme başarısız oldu: ${response.reasonPhrase}');
       }
+    } on SocketException {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor:  Color.fromARGB(255, 56, 103, 154),
+          content: Text('İnternetə qoşulmayıb. İnternet əlaqənizi yoxlayın.'),
+        ),
+      );
+    } on HttpException {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor:  Color.fromARGB(255, 56, 103, 154),
+          content: Text('HTTP hatası: Bağlantı kurulamadı.'),
+        ),
+      );
+    } on FormatException {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor:  Color.fromARGB(255, 56, 103, 154),
+          content: Text('Format hatası: Geçersiz yanıt alındı.'),
+        ),
+      );
     } catch (error) {
-      print('Hata oluştu: $error');
-      // Xəta vəziyyətində istifadəçiyə bildiriş göstəriləbilir
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor:  const Color.fromARGB(255, 56, 103, 154),
+          content: Text('Xəta baş verdi: $error'),
+        ),
+      );
     } finally {
       setState(() {
         isLoading = false;
       });
     }
   }
-
   Future<void> _selectStartDate(BuildContext context) async {
     final DateTime? pickedStartDate = await showDatePicker(
       context: context,

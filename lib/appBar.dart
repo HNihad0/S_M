@@ -383,19 +383,6 @@ class _MenuState extends State<Menu> {
                 Navigator.of(context).pop();  
               },
             ),
-            ListTile(
-              leading: const Icon(
-                MyFlutterApp.chart_pie,
-                size: 18,
-              ),
-              title: const Text('Mənfəət və Zərər hesabatı'),
-              onTap: () {
-                setState(() {
-                  selectedPage = 'Mənfəət və Zərər hesabatı';
-                });
-                Navigator.of(context).pop();  
-              },
-            ),
           ],
         ),
       ),

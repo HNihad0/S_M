@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
@@ -35,7 +36,7 @@ class _XercHesabatiState extends State<XercHesabati> {
 
   Future<void> fetchData() async {
     // ignore: prefer_const_declarations
-    final String baseUrl = 'http://10.0.2.2:3000/api/xerc_hes';
+    final String baseUrl = 'http://192.168.0.103:3000/api/xerc_hes';
     final DateFormat formatter = DateFormat('yyyy-MM-dd');
 
     startDate ??= DateTime.now();
@@ -50,24 +51,47 @@ class _XercHesabatiState extends State<XercHesabati> {
         Uri.parse('$baseUrl?start=${formatter.format(startDate!)}&end=${formatter.format(endDate!)}&user=$userId'),
       );
 
-      if (response.statusCode == 200) {
+     if (response.statusCode == 200) {
         setState(() {
           data = json.decode(response.body);
-          toplamMebleg = data.fold<double>(0, (sum, item) => sum + (item['mebleg'] ?? 0).toDouble());
         });
       } else {
-        throw Exception('Data çəkmə uğursuz oldu: ${response.reasonPhrase}');
+        throw Exception('Veri çekme başarısız oldu: ${response.reasonPhrase}');
       }
+    } on SocketException {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor:  Color.fromARGB(255, 56, 103, 154),
+          content: Text('İnternetə qoşulmayıb. İnternet əlaqənizi yoxlayın.'),
+        ),
+      );
+    } on HttpException {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor:  Color.fromARGB(255, 56, 103, 154),
+          content: Text('HTTP hatası: Bağlantı kurulamadı.'),
+        ),
+      );
+    } on FormatException {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor:  Color.fromARGB(255, 56, 103, 154),
+          content: Text('Format hatası: Geçersiz yanıt alındı.'),
+        ),
+      );
     } catch (error) {
-      print('Xıta baş verdi: $error');
-      // Xəta vəziyyətində istifadəçiyə bildiriş göstəriləbilir
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor:  const Color.fromARGB(255, 56, 103, 154),
+          content: Text('Xəta baş verdi: $error'),
+        ),
+      );
     } finally {
       setState(() {
         isLoading = false;
       });
     }
   }
-
   Future<void> _selectStartDate(BuildContext context) async {
     final DateTime? pickedStartDate = await showDatePicker(
       context: context,
@@ -198,12 +222,6 @@ class _XercHesabatiState extends State<XercHesabati> {
                                         DataCell(Text(item['layihe'] ?? '')),
                                       ]);
                                     }).toList(),
-                                    DataRow(cells: [
-                                      const DataCell(Text('Toplam', style: TextStyle(fontWeight: FontWeight.bold))),
-                                      const DataCell(Text('')),
-                                      DataCell(Text(toplamMebleg.toString(), style: const TextStyle(fontWeight: FontWeight.bold))),
-                                      const DataCell(Text('')),
-                                    ]),
                                   ],
                                 ),
                               ),
@@ -244,7 +262,7 @@ class _XercHesabatiState extends State<XercHesabati> {
                   ),
                   const SizedBox(width: 30),
                   TextButton.icon(
-                    onPressed: fetchData,
+                    onPressed: (){},
                     icon: const Icon(Icons.filter_list),
                     label: const Text('Axtar'),
                   ),
